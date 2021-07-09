@@ -2,6 +2,8 @@
 #using Pkg; Pkg.add(url="https://github.com/Andre-Fontenelle/composites")
 using Composites: Composite, CarbonFiber
 using Test
+include("tests/sparTestsDefaults.jl")
+include("methods/abstractMethods.jl")
 
 # =========================== Parent Abstract Type =========================== #
 abstract type AbstractSpar end
@@ -31,26 +33,64 @@ struct RectangularSpar <: AbstractSpar
     # Specific spar parameters
     webHeight        :: Array{T,1} where T <: Float64
     capLength        :: Array{T,1} where T <: Float64
-
 end
 
+# =============================== Constructors =============================== #
+function RectangularConstructor(structInputs...)
+    Spar = RectangularSpar(structInputs...)
+    assertAbstractSpar(Spar)
+    assertConcreteSpar(Spar)
+    return Spar
+end
+
+function CircularConstructor(structInputs...)
+    Spar = CircularSpar(structInputs...)
+    assertAbstractSpar(Spar)
+    assertConcreteSpar(Spar)
+    return Spar
+end
+
+function assertAbstractSpar(Spar :: AbstractSpar)
+    @assert Spar.numberOfNodes > 1
+    @assert size(Spar.sectionNodes, 1) > 1
+    @assert length(Spar.layerTransitions) == size(Spar.layerAngles, 2) - 1
+end
+
+function assertConcreteSpar(Spar :: RectangularSpar)
+    @assert length(Spar.webHeight) == size(Spar.sectionNodes, 1)
+    @assert length(Spar.webHeight) == length(Spar.capLength)
+end
+
+function assertConcreteSpar(Spar :: CircularSpar); end
+
 # ================================== Tests =================================== #
-@testset verbose = true "Circular Spar Initialization" begin
-    @testset "$numberOfSections Section(s)" for numberOfSections = 1
+@testset "Circular Spar Initialization" begin
+    @testset "$numberOfSections Section(s)" for numberOfSections = 1:2
         # Get default test spar
-        spar, testDict = defaultCircularSpar(numberOfSections)
+        spar, initDict = defaultCircularSpar(numberOfSections)
 
-        # Extract values from dictionary
-        numberOfNodes    = testDict["numberOfNodes"]
-        sectionNodes     = testDict["sectionNodes"]
-        layerTransitions = testDict["layerTransitions"]
-        layerAngles      = testDict["layerAngles"]
-        layerMaterial    = testDict["layerMaterial"]
+        # Tests
+        @test spar.numberOfNodes    == initDict["numberOfNodes"]
+        @test spar.sectionNodes     == initDict["sectionNodes"]
+        @test spar.layerTransitions == initDict["layerTransitions"]
+        @test spar.layerAngles      == initDict["layerAngles"]
+        @test spar.layerMaterial    == initDict["layerMaterial"]
+        @test spar.diameter         == initDict["diameter"]
+    end
+end
 
-        @test spar.numberOfNodes    == numberOfNodes
-        @test spar.sectionNodes     == sectionNodes
-        @test spar.layerTransitions == layerTransitions
-        @test spar.layerAngles      == layerAngles
-        @test spar.layerMaterial    == layerMaterial
+@testset "Rectangular Spar Initialization" begin
+    @testset "$numberOfSections Section(s)" for numberOfSections = 1:2
+        # Get default test spar
+        spar, initDict = defaultRectangularSpar(numberOfSections)
+
+        # Tests
+        @test spar.numberOfNodes    == initDict["numberOfNodes"]
+        @test spar.sectionNodes     == initDict["sectionNodes"]
+        @test spar.layerTransitions == initDict["layerTransitions"]
+        @test spar.layerAngles      == initDict["layerAngles"]
+        @test spar.layerMaterial    == initDict["layerMaterial"]
+        @test spar.webHeight        == initDict["webHeight"]
+        @test spar.capLength        == initDict["capLength"]
     end
 end
