@@ -1,5 +1,6 @@
 # ================================= Imports ================================== #
-
+# using Pkg; Pkg.add(url="https://github.com/Andre-Fontenelle/miscellaneous_functions")
+import MiscFunctions: absVector
 
 # ================================= Methods ================================== #
 function getNumberOfElements(Spar::AbstractSpar)
@@ -9,31 +10,11 @@ function getNumberOfSections(Spar::AbstractSpar)
     return size(Spar.sectionNodes, 1) - 1; end
 
 function getSectionLength(Spar::AbstractSpar)
-    sectionVector = diff(sparObj.sectionPoints, dims=1)
-    return sqrt.(sum(sectionVector.^2, dims=2)); end
+    sectionVector = diff(Spar.sectionNodes, dims=1)
+    return absVector(sectionVector, 2); end
 
-# ================================== Tests =================================== #
-function abstractTests(Spar, expectedDict)
-    @test getNumberOfElements(Spar) == expectedDict["numberOfElements"]
-    @test getNumberOfSections(Spar) == expectedDict["numberOfSections"]
-end
+function getTotalLength(Spar::AbstractSpar)
+    return sum(getSectionLength(Spar), dims=1)[1]; end
 
-@testset "Circular Spar Abstract Methods" begin
-    @testset "$numberOfSections Section(s)" for numberOfSections = 1:2
-        # Get default test spar
-        Spar, _, expectedDict = defaultCircularSpar(numberOfSections)
-
-        # Tests
-        abstractTests(Spar, expectedDict)
-    end
-end
-
-@testset "Rectangular Spar Abstract Methods" begin
-    @testset "$numberOfSections Section(s)" for numberOfSections = 1:2
-        # Get default test spar
-        Spar, _, expectedDict = defaultRectangularSpar(numberOfSections)
-
-        # Tests
-        abstractTests(Spar, expectedDict)
-    end
-end
+function getCumulativeLength(Spar::AbstractSpar)
+    return cumsum(getSectionLength(Spar), dims=1); end

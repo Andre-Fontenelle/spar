@@ -1,8 +1,8 @@
 # ================================= Imports ================================== #
-# include("extra_functions/emptyArray.jl")
+# using Pkg; Pkg.add(url="https://github.com/Andre-Fontenelle/miscellaneous_functions")
+import MiscFunctions: colMat
 
-
-# ================================= Circular ================================= #
+# ============================ Default Spar Calls ============================ #
 function defaultCircularSpar(numberOfSections)
     if numberOfSections == 1
         return defaultOneSectionCircularSpar()
@@ -19,6 +19,7 @@ function defaultRectangularSpar(numberOfSections)
     end
 end
 
+# ================================= Circular ================================= #
 function defaultOneSectionCircularSpar()
     # Global spar parameters (size of arrays might change)
     numberOfNodes    :: Int64            = 5
@@ -40,7 +41,10 @@ function defaultOneSectionCircularSpar()
 
     # Expected method results
     expectedDict = Dict("numberOfElements" => 4,
-                        "numberOfSections" => 1)
+                        "numberOfSections" => 1,
+                        "sectionLength"    => ones(1,1),
+                        "totalLength"      => 1,
+                        "cumulativeLength" => ones(1,1))
 
     # Spar object
     spar = CircularConstructor(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, diameter)
@@ -69,7 +73,9 @@ function defaultTwoSectionCircularSpar()
 
     # Expected method results
     expectedDict = Dict("numberOfElements" => 5,
-                        "numberOfSections" => 2)
+                        "numberOfSections" => 2,
+                        "sectionLength"    => [0.5024937810560445 0.5049752469181039]',
+                        "totalLength"      => 1.0074690279741483)
 
     # Spar object
     spar = CircularConstructor(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, diameter)
@@ -101,7 +107,9 @@ function defaultOneSectionRectangularSpar()
 
     # Expected method results
     expectedDict = Dict("numberOfElements" => 3,
-                        "numberOfSections" => 1)
+                        "numberOfSections" => 1,
+                        "sectionLength"    => 1.044030650891055*ones(1,1),
+                        "totalLength"      => 1.044030650891055)
 
     # Spar object
     spar = RectangularConstructor(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, webHeight, capLength)
@@ -132,7 +140,9 @@ function defaultTwoSectionRectangularSpar()
 
     # Expected method results
     expectedDict = Dict("numberOfElements" => 2,
-                        "numberOfSections" => 2)
+                        "numberOfSections" => 2,
+                        "sectionLength"    => [0.5024937810560445 0.5049752469181039]',
+                        "totalLength"      => 1.0074690279741483)
 
     # Spar object
     spar = RectangularConstructor(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, webHeight, capLength)
