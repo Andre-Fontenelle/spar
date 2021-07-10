@@ -21,7 +21,7 @@ end
 
 # ================================= Circular ================================= #
 function defaultOneSectionCircularSpar()
-    # Global spar parameters (size of arrays might change)
+    # Global spar parameters (number of array dimensions might change)
     numberOfNodes    :: Int64            = 5
     sectionNodes     :: Array{Float64,2} = convert.(Float64, [0 0 0;0 1 0])
     layerTransitions :: Array{Int64,1}   = [3]
@@ -40,20 +40,23 @@ function defaultOneSectionCircularSpar()
                     "diameter"         => diameter)
 
     # Expected method results
-    expectedDict = Dict("numberOfElements" => 4,
-                        "numberOfSections" => 1,
-                        "sectionLength"    => ones(1,1),
-                        "totalLength"      => 1,
-                        "cumulativeLength" => ones(1,1))
+    expectedDict = Dict("numberOfElements"        => 4,
+                        "numberOfSections"        => 1,
+                        "sectionLength"           => reshape(1, :, 1),
+                        "totalLength"             => 1,
+                        "cumulativeLength"        => reshape(1, :, 1),
+                        "sectionTransitions"      => reshape([1, 5], :, 1),
+                        "numberOfNodesInSections" => reshape([5], :, 1),
+                        "nodes"                   => linspace([0 0 0], [0 1 0], 5))
 
     # Spar object
-    spar = CircularConstructor(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, diameter)
+    spar = CircularSpar(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, diameter)
 
     return spar, initDict, expectedDict
 end
 
 function defaultTwoSectionCircularSpar()
-    # Global spar parameters (size of arrays might change)
+    # Global spar parameters (number of array dimensions might change)
     numberOfNodes    :: Int64            = 6
     sectionNodes     :: Array{Float64,2} = convert.(Float64, [0 0 0;0.05 0.5 0;0 1 0.05])
     layerTransitions :: Array{Int64,1}   = [2, 3, 5]
@@ -72,20 +75,24 @@ function defaultTwoSectionCircularSpar()
                     "diameter"         => diameter)
 
     # Expected method results
-    expectedDict = Dict("numberOfElements" => 5,
-                        "numberOfSections" => 2,
-                        "sectionLength"    => [0.5024937810560445 0.5049752469181039]',
-                        "totalLength"      => 1.0074690279741483)
+    expectedDict = Dict("numberOfElements"        => 5,
+                        "numberOfSections"        => 2,
+                        "sectionLength"           => reshape([0.5024937810560445, 0.5049752469181039], :, 1),
+                        "totalLength"             => 1.0074690279741483,
+                        "cumulativeLength"        => reshape([0.5024937810560445, 1.0074690279741483], :, 1),
+                        "sectionTransitions"      => reshape([1, 3, 6], :, 1),
+                        "numberOfNodesInSections" => reshape([3, 4], :, 1),
+                        "nodes"                   => [linspace([0 0 0], [0.05 0.5 0], 3); linspace([0.05 0.5 0], [0 1 0.05], 4)[2:end,:]])
 
     # Spar object
-    spar = CircularConstructor(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, diameter)
+    spar = CircularSpar(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, diameter)
 
     return spar, initDict, expectedDict
 end
 
 # =============================== Rectangular ================================ #
 function defaultOneSectionRectangularSpar()
-    # Global spar parameters (size of arrays might change)
+    # Global spar parameters (number of array dimensions might change)
     numberOfNodes    :: Int64            = 4
     sectionNodes     :: Array{Float64,2} = convert.(Float64, [0 0 0;0.3 1 0])
     layerTransitions :: Array{Int64,1}   = [2]
@@ -106,20 +113,24 @@ function defaultOneSectionRectangularSpar()
                     "capLength"        => capLength)
 
     # Expected method results
-    expectedDict = Dict("numberOfElements" => 3,
-                        "numberOfSections" => 1,
-                        "sectionLength"    => 1.044030650891055*ones(1,1),
-                        "totalLength"      => 1.044030650891055)
+    expectedDict = Dict("numberOfElements"        => 3,
+                        "numberOfSections"        => 1,
+                        "sectionLength"           => reshape(1.044030650891055, :, 1),
+                        "totalLength"             => 1.044030650891055,
+                        "cumulativeLength"        => reshape(1.044030650891055, :, 1),
+                        "sectionTransitions"      => reshape([1, 4], :, 1),
+                        "numberOfNodesInSections" => reshape([4], :, 1),
+                        "nodes"                   => linspace([0 0 0], [0.3 1 0], 4))
 
     # Spar object
-    spar = RectangularConstructor(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, webHeight, capLength)
+    spar = RectangularSpar(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, webHeight, capLength)
 
     return spar, initDict, expectedDict
 end
 
 function defaultTwoSectionRectangularSpar()
-    # Global spar parameters (size of arrays might change)
-    numberOfNodes    :: Int64            = 3
+    # Global spar parameters (number of array dimensions might change)
+    numberOfNodes    :: Int64            = 6
     sectionNodes     :: Array{Float64,2} = convert.(Float64, [0 0 0;0.05 0.5 0;0 1 0.05])
     layerTransitions :: Array{Int64,1}   = Array{Int64}(undef, 0)
     layerAngles      :: Array{Any,3}     = repeat(zeros(2,1), 1, 1, 4)
@@ -139,13 +150,17 @@ function defaultTwoSectionRectangularSpar()
                     "capLength"        => capLength)
 
     # Expected method results
-    expectedDict = Dict("numberOfElements" => 2,
-                        "numberOfSections" => 2,
-                        "sectionLength"    => [0.5024937810560445 0.5049752469181039]',
-                        "totalLength"      => 1.0074690279741483)
+    expectedDict = Dict("numberOfElements"        => 5,
+                        "numberOfSections"        => 2,
+                        "sectionLength"           => reshape([0.5024937810560445, 0.5049752469181039], :, 1),
+                        "totalLength"             => 1.0074690279741483,
+                        "cumulativeLength"        => reshape([0.5024937810560445, 1.0074690279741483], :, 1),
+                        "sectionTransitions"      => reshape([1, 3, 6], :, 1),
+                        "numberOfNodesInSections" => reshape([3, 4], :, 1),
+                        "nodes"                   => [linspace([0 0 0], [0.05 0.5 0], 3); linspace([0.05 0.5 0], [0 1 0.05], 4)[2:end,:]])
 
     # Spar object
-    spar = RectangularConstructor(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, webHeight, capLength)
+    spar = RectangularSpar(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, webHeight, capLength)
 
     return spar, initDict, expectedDict
 end
