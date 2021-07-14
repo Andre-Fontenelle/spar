@@ -1,11 +1,13 @@
 # ========================== Import Other Packages =========================== #
 #using Pkg; Pkg.add(url="https://github.com/Andre-Fontenelle/composites")
 # using Pkg; Pkg.add(url="https://github.com/Andre-Fontenelle/miscellaneous_functions")
+# using Pkg; Pkg.add("Interpolations")
 using Composites: Composite, CarbonFiber
 using Test
 include("aux_functions/baseFunctionsOverload.jl")
 include("aux_functions/matlabFunctions.jl")
 include("aux_functions/vectorOperations.jl")
+include("elements.jl")
 
 # =========================== Parent Abstract Types ========================== #
 abstract type AbstractSpar end
@@ -13,54 +15,100 @@ abstract type CompositeSpar <: AbstractSpar end
 
 # ========================== Circular Concrete Type ========================== #
 struct CircularSpar <: CompositeSpar
-    # CompositeSpar parameters (size of arrays might change)
-    numberOfNodes    :: Int64
-    sectionNodes     :: Array{Float64,2}
-    layerTransitions :: Array{Int64,1}
-    layerAngles      :: Array{Any,2}
-    layerMaterial    :: Composite
+    # AbstractSpar parameters
+    numberOfNodes      :: Int64
+    numberOfElements   :: Int64
+    numberOfSections   :: Int64
+    sectionNodes       :: Matrix{Float64}
+    sectionTransitions :: Matrix{Int64}
+    nodes              :: Matrix{Float64}
 
-    # Specific spar parameters
-    diameter         :: Float64
+    # CompositeSpar parameters
+    layerMaterial  :: Composite
+    layerAngles    :: Array{T,3} where T
 
-    # Impose constraints through inner constructor
-    function CircularSpar(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, diameter)
-        compositeSparConstraints(numberOfNodes, sectionNodes, layerTransitions, layerAngles)
-        new(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, diameter)
+    # CircularSpar parameters
+    diameter :: Vector{Float64}
+
+    # ========================== Inner Constructor =========================== #
+    function CircularSpar(numberOfNodes    :: Int64,
+                          sectionNodes     :: Matrix{Float64},
+                          layerTransitions :: Vector,
+                          layerAngles      :: Array{T,2},
+                          layerMaterial    :: Composite,
+                          diameter         :: Vector{Float64}) where T
+
+        # Constraints on input values
+        abstractSparConstraints(numberOfNodes, sectionNodes)
+        compositeSparConstraints(layerTransitions, layerAngles)
+        circularSparConstraints(diameter, sectionNodes)
+
+        # Extra parameters
+        numberOfElements, numberOfSections, sectionTransitions, nodes = extraParameterAbstractSpar(numberOfNodes, sectionNodes)
+        layerAngles = extraParameterCompositeSpar(layerAngles, layerTransitions, numberOfElements)
+        diameter = extraParameterCircularSpar(numberOfNodes, sectionTransitions, diameter)
+
+        # Grouping inputs
+        abstractInputs  = (numberOfNodes, numberOfElements, numberOfSections, sectionNodes, sectionTransitions, nodes)
+        compositeInputs = (layerMaterial, layerAngles)
+        circularInputs  = tuple(diameter)
+
+        new(abstractInputs..., compositeInputs..., circularInputs...)
     end
 end
 
 # ======================== Rectangular Concrete Type ========================= #
 struct RectangularSpar <: CompositeSpar
-    # CompositeSpar parameters (size of arrays might change)
-    numberOfNodes    :: Int64
-    sectionNodes     :: Array{Float64,2}
-    layerTransitions :: Array{Int64,1}
-    layerAngles      :: Array{Any,3}
-    layerMaterial    :: Composite
+    # AbstractSpar parameters
+    numberOfNodes      :: Int64
+    numberOfElements   :: Int64
+    numberOfSections   :: Int64
+    sectionNodes       :: Matrix{Float64}
+    sectionTransitions :: Matrix{Int64}
+    nodes              :: Matrix{Float64}
 
-    # Specific spar parameters
-    webHeight        :: Array{Float64,1}
-    capLength        :: Array{Float64,1}
+    # CompositeSpar parameters
+    layerMaterial  :: Composite
+    layerAngles    :: Array{T,3} where T
 
-    # Impose constraints through inner constructor
-    function RectangularSpar(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, webHeight, capLength)
-        compositeSparConstraints(numberOfNodes, sectionNodes, layerTransitions, layerAngles)
-        @assert length(webHeight) == size(sectionNodes, 1)
-        @assert length(webHeight) == length(capLength)
-        new(numberOfNodes, sectionNodes, layerTransitions, layerAngles, layerMaterial, webHeight, capLength)
+    # RectangularSpar parameters
+    webHeight :: Vector{Float64}
+    capLength :: Vector{Float64}
+
+    # ========================== Inner Constructor =========================== #
+    function RectangularSpar(numberOfNodes    :: Int64,
+                             sectionNodes     :: Matrix{Float64},
+                             layerTransitions :: Vector,
+                             layerAngles      :: Array{T,3},
+                             layerMaterial    :: Composite,
+                             webHeight        :: Vector{Float64},
+                             capLength        :: Vector{Float64}) where T
+
+        # Constraints on input values
+        abstractSparConstraints(numberOfNodes, sectionNodes)
+        compositeSparConstraints(layerTransitions, layerAngles)
+        rectangularSparConstraints(webHeight, capLength, sectionNodes)
+
+        # Extra parameters
+        numberOfElements, numberOfSections, sectionTransitions, nodes = extraParameterAbstractSpar(numberOfNodes, sectionNodes)
+        layerAngles = extraParameterCompositeSpar(layerAngles, layerTransitions, numberOfElements)
+        webHeight, capLength = extraParameterRectangularSpar(numberOfNodes, sectionTransitions, webHeight, capLength)
+
+        # Grouping inputs
+        abstractInputs    = (numberOfNodes, numberOfElements, numberOfSections, sectionNodes, sectionTransitions, nodes)
+        compositeInputs   = (layerMaterial, layerAngles)
+        rectangularInputs = (webHeight, capLength)
+
+        new(abstractInputs..., compositeInputs..., rectangularInputs...)
     end
 end
 
-# =================== Constraints on Abstract Spar Inputs ==================== #
-function compositeSparConstraints(numberOfNodes, sectionNodes, layerTransitions, layerAngles)
-    @assert size(sectionNodes, 1) > 1
-    @assert numberOfNodes >= size(sectionNodes, 1)
-    @assert length(layerTransitions) == size(layerAngles, 2) - 1
-end
-
 # =========================== Import "Sub-Modules" =========================== #
+include("methods/constructorMethods/sparConstructorConstraints.jl")
+include("methods/constructorMethods/abstractSparConstructorMethods.jl")
+include("methods/constructorMethods/compositeSparConstructorMethods.jl")
+include("methods/constructorMethods/circularSparConstructorMethods.jl")
+include("methods/constructorMethods/rectangularSparConstructorMethods.jl")
 include("tests/sparTestsDefaults.jl")
-include("tests/initializationTests.jl")
-include("methods/abstractMethods.jl")
+include("methods/abstractSparMethods.jl")
 include("tests/abstractSparMethodsTests.jl")
