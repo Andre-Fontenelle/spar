@@ -1,31 +1,33 @@
 # ================================== Tests =================================== #
 function abstractTests(Spar, expectedDict)
-    @test getNumberOfElements(Spar)        == expectedDict["numberOfElements"]
-    @test getNumberOfSections(Spar)        == expectedDict["numberOfSections"]
-    @test getSectionLength(Spar)            ≈ expectedDict["sectionLength"]
-    @test getTotalLength(Spar)              ≈ expectedDict["totalLength"]
-    @test getCumulativeLength(Spar)         ≈ expectedDict["cumulativeLength"]
-    @test getSectionTransitions(Spar)      == expectedDict["sectionTransitions"]
-    @test getNumberOfNodesInSections(Spar) == expectedDict["numberOfNodesInSections"]
-    @test getNodes(Spar)                    ≈ expectedDict["nodes"]
+    @test Spar.sectionTransitions == expectedDict["sectionTransitions"]
+    @test Spar.nodes               ≈ expectedDict["nodes"]
 end
 
-@testset "Circular Spar Abstract Methods" begin
+function circularTests(Spar, expectedDict)
+end
+
+function rectangularTests(Spar, expectedDict)
+end
+
+@testset "Circular Spar Methods" begin
     @testset "$numberOfSections Section(s)" for numberOfSections = 1:2
         # Get default test spar
-        Spar, _, expectedDict = defaultCircularSpar(numberOfSections)
+        Spar, expectedDict = defaultCircularSpar(numberOfSections)
 
         # Tests
         abstractTests(Spar, expectedDict)
+        circularTests(Spar, expectedDict)
     end
 end
 
-@testset "Rectangular Spar Abstract Methods" begin
+@testset "Rectangular Spar Methods" begin
     @testset "$numberOfSections Section(s)" for numberOfSections = 1:2
         # Get default test spar
-        Spar, _, expectedDict = defaultRectangularSpar(numberOfSections)
+        Spar, expectedDict = defaultRectangularSpar(numberOfSections)
 
         # Tests
         abstractTests(Spar, expectedDict)
+        rectangularTests(Spar, expectedDict)
     end
 end
